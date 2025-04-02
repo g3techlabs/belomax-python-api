@@ -1,7 +1,7 @@
-from fastapi import FastAPI
+from dotenv import load_dotenv
+from redis_queue.consumer import redis_consumer
 
-app = FastAPI()
+load_dotenv()
 
-@app.get("/")
-def read_root():
-  return {"Hello": "World"}
+if (__name__ == "__main__"):
+  redis_consumer("users-queue")
