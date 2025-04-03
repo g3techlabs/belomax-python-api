@@ -1,5 +1,5 @@
 from dotenv import load_dotenv
-from redis_queue.consumer import redis_consumer
+from core.redis_queue.consumer import redis_consumer
 
 load_dotenv()
 
