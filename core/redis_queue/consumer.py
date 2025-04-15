@@ -5,7 +5,7 @@ import time
 
 # ! ATENÇÃO: SE O PROCESSOR DO NESTJS ESTIVER ATIVADO, ELE INTERCEPTA OS JOBS, E O PYTHON NÃO CONSEGUE LER
 
-def redis_consumer(redis_queue_name):
+def redis_consumer(redis_queue_name, job_handler):
   print(os.getenv("REDIS_HOST"), os.getenv("REDIS_PORT"))
   # Conectar ao Redis
   redis_client = redis.Redis(host=os.getenv("REDIS_HOST"), port=os.getenv("REDIS_PORT"), db=0, decode_responses=True)
@@ -30,13 +30,15 @@ def redis_consumer(redis_queue_name):
         job_name = job_data.get("name", "unknown")
         job_payload = json.loads(job_data.get("data", "{}"))  # Convertendo JSON para dicionário
 
-        if job_name == "send-credentials-email":
-          email = job_payload.get("email")
-          password = job_payload.get("password")
-          print(f"📧 Enviando e-mail para {email} com a senha {password}")
+        job_handler(job_name, job_payload)
+
+        #if job_name == "send-credentials-email":
+         # email = job_payload.get("email")
+          #password = job_payload.get("password")
+          #print(f"📧 Enviando e-mail para {email} com a senha {password}")
 
           # 🔥 Se quiser remover o job do Redis após processá-lo
-          redis_client.delete(job_key)
+          #redis_client.delete(job_key)
 
     else:
       time.sleep(1)

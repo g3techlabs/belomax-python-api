@@ -1,6 +1,7 @@
 from selenium import webdriver
 import numpy as np
 from selenium.webdriver.common.by import By
+from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from time import time
@@ -27,7 +28,7 @@ def scrape(df, name):
     "matricula": "",
     "vinculo": "",
     "numpens": "",
-    "margem_consignavel": "",	
+    "margem_consignavel": "",
     "total_vantagens": "",
     "liquido": "",
     "periodo": "",
@@ -213,3 +214,47 @@ def scrape(df, name):
   pessoas.insert(0, pessoa_van_template)
   
   return [pessoas, pessoas_sem_registro]
+
+def scrape_unique(data):
+  print(f"Iniciando extração única para: {data}\n")
+  
+  options = webdriver.ChromeOptions()
+  options.add_experimental_option('excludeSwitches', ['enable-logging'])
+  options.add_argument("--headless=new")
+  
+  driver: WebDriver = webdriver.Chrome(options=options)
+  driver.maximize_window()
+  
+  try:
+    driver.get('http://servicos.searh.rn.gov.br/searh/copag/contra_cheque_pensionistas.asp')
+    box_form = driver.find_element(By.ID, 'frmDados')
+    
+    driver.find_element(By.ID, 'matricula').send_keys(str(data['matricula']))
+    driver.find_element(By.ID, 'vinculo').send_keys(str(data['vinculo']))
+    driver.find_element(By.ID, 'cpf').send_keys(str(data['cpf']))
+    driver.find_element(By.ID, 'numpens').send_keys(str(data['numpens']))
+    driver.find_element(By.ID, 'mes').click()
+    driver.find_element(By.XPATH, f"/html/body/div[1]/div[2]/div/div/div[2]/form/div[5]/select/option[{convert_month(data['mes'])}]").click()
+    driver.find_element(By.ID, 'ano').send_keys(str(data['ano']))
+    
+    box_form.submit()
+    
+    comp_nome = driver.find_element(By.XPATH, '/html/body/table[2]/tbody/tr[1]/td[1]/font/b/font').text
+    comp_cpf = driver.find_element(By.XPATH, '/html/body/table[2]/tbody/tr[2]/td[3]/font[2]/font').text
+    comp_matricula = driver.find_element(By.XPATH, '/html/body/table[2]/tbody/tr[1]/td[2]/font/font[2]').text
+    comp_vinculo = driver.find_element(By.XPATH, '/html/body/table[2]/tbody/tr[1]/td[3]/font/font[2]').text
+    comp_numpens = driver.find_element(By.XPATH, '/html/body/table[2]/tbody/tr[1]/td[4]/font[2]/font').text
+    comp_periodo = driver.find_element(By.XPATH, '/html/body/table[1]/tbody/tr[2]/td[3]/p/font/font[2]').text
+    
+    result = {
+      "nome": comp_nome,
+      "cpf": comp_cpf,
+      "matricula": comp_matricula,
+      "vinculo": comp_vinculo,
+      "numpens": comp_numpens,
+      "periodo": comp_periodo,
+    }
+    print(f"Extração concluída: {result}")
+    return result
+  finally:
+    driver.quit()
