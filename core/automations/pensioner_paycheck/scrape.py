@@ -5,7 +5,7 @@ from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
 from time import time
-from utils.functions import convert_month, convert_seconds_to_formatted_time
+from core.utils.functions import convert_month, convert_seconds_to_formatted_time
 
 def scrape(df, name):
   print(f"Iniciando extração da planilha: {name}\n")

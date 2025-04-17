@@ -20,7 +20,7 @@ def redis_consumer(redis_queue_name, job_handler):
 
     if job_id:
         # Buscar detalhes do job
-      job_key = f"bull:users-queue:{job_id}"
+      job_key = f"bull:{redis_queue_name}:{job_id}"
       job_data = redis_client.hgetall(job_key)
 
       if job_data:
@@ -29,6 +29,8 @@ def redis_consumer(redis_queue_name, job_handler):
         # Decodificar os dados
         job_name = job_data.get("name", "unknown")
         job_payload = json.loads(job_data.get("data", "{}"))  # Convertendo JSON para dicionário
+        
+        print(job_payload)
 
         job_handler(job_name, job_payload)
 
