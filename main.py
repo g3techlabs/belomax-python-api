@@ -13,4 +13,4 @@ if (__name__ == "__main__"):
     elif job_name == "new-statement-extract":
       trigger_statement_extract(job_payload)
 
-  redis_consumer("belomax-queue", handle_job)
+  redis_consumer("belomax-python-queue", handle_job)
