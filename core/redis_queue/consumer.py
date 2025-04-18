@@ -2,49 +2,63 @@ import os
 import redis
 import json
 import time
+import traceback
+from datetime import datetime
+from dotenv import load_dotenv
 
-# ! ATENÇÃO: SE O PROCESSOR DO NESTJS ESTIVER ATIVADO, ELE INTERCEPTA OS JOBS, E O PYTHON NÃO CONSEGUE LER
+load_dotenv()
 
-def redis_consumer(redis_queue_name, job_handler):
-  print(os.getenv("REDIS_HOST"), os.getenv("REDIS_PORT"))
-  # Conectar ao Redis
-  redis_client = redis.Redis(host=os.getenv("REDIS_HOST"), port=os.getenv("REDIS_PORT"), db=0, decode_responses=True)
+def redis_consumer(redis_queue_name: str, job_handler: callable):
+    redis_host = os.getenv("REDIS_HOST", "localhost")
+    redis_port = int(os.getenv("REDIS_PORT", 6379))
+    
+    redis_client = redis.Redis(
+        host=redis_host,
+        port=redis_port,
+        db=0,
+        decode_responses=True
+    )
 
-  queue_name = f"bull:{redis_queue_name}:wait"
-  
-  print(f"🚀 Consumidor iniciado para a fila '{redis_queue_name}'")
+    queue_name = f"bull:{redis_queue_name}:wait"
 
-  while True:
-    # Pega um job da fila (FIFO - primeiro que entra, primeiro que sai)
-    job_id = redis_client.lpop(queue_name)
+    print(f"🚀 {datetime.now()} | Consumidor iniciado para a fila '{redis_queue_name}' ({queue_name})")
+    
+    while True:
+        try:
+            job_id = redis_client.lpop(queue_name)
 
-    if job_id:
-        # Buscar detalhes do job
-      job_key = f"bull:{redis_queue_name}:{job_id}"
-      job_data = redis_client.hgetall(job_key)
+            if job_id:
+                job_key = f"bull:{redis_queue_name}:{job_id}"
+                job_data = redis_client.hgetall(job_key)
 
-      if job_data:
-        print(f"🎯 Job encontrado: {job_data}")
+                if not job_data:
+                    print(f"⚠️ {datetime.now()} | Job ID {job_id} não encontrado na chave '{job_key}'")
+                    continue
 
-        # Decodificar os dados
-        job_name = job_data.get("name", "unknown")
-        job_payload = json.loads(job_data.get("data", "{}"))  # Convertendo JSON para dicionário
-        
-        print(job_payload)
+                print(f"🎯 {datetime.now()} | Job encontrado: {job_data}")
 
-        job_handler(job_name, job_payload)
+                job_name = job_data.get("name", "unknown")
+                raw_data = job_data.get("data", "{}")
 
-        #if job_name == "send-credentials-email":
-         # email = job_payload.get("email")
-          #password = job_payload.get("password")
-          #print(f"📧 Enviando e-mail para {email} com a senha {password}")
+                try:
+                    job_payload = json.loads(raw_data)
+                except json.JSONDecodeError:
+                    print(f"❌ {datetime.now()} | Erro ao decodificar payload do job {job_id}")
+                    continue
 
-          # 🔥 Se quiser remover o job do Redis após processá-lo
-          #redis_client.delete(job_key)
+                try:
+                    job_handler(job_name, job_payload)
+                except Exception as handler_error:
+                    print(f"🔥 {datetime.now()} | Erro ao processar job '{job_name}'")
+                    traceback.print_exc()
+                
+                # ✅ Job processado, opção de deletar:
+                # redis_client.delete(job_key)
+            else:
+                time.sleep(1)
+                print(f"🔄 {datetime.now()} | Nenhum job encontrado, aguardando...")
 
-    else:
-      time.sleep(1)
-      print("🔄 Nenhum job encontrado, aguardando...")
-
-# 🎯 Job encontrado: {'name': 'send-credentials-email', 'data': '{"email":"gabrielguilherme13@hotmail.com","password":"teste123"}', 'opts': '{"attempts":0}', 'timestamp': '1743551961137', 'delay': '0', 'priority': '0'}
-# 📧 Enviando e-mail para gabrielguilherme13@hotmail.com com a senha teste123
+        except Exception as err:
+            print(f"💥 {datetime.now()} | Erro inesperado no consumer loop")
+            traceback.print_exc()
+            time.sleep(5)
