@@ -63,7 +63,3 @@ def download_from_s3(key):
         raise
 
     return local_path
-
-def extract_from_s3(key):
-    """Baixa o PDF do S3 e retorna o caminho local."""
-    return download_from_s3(key)
