@@ -56,7 +56,7 @@ def detect_header_line(line: str) -> bool:
     detected_line = re.search(pattern, line)
     return detected_line
 
-def extract_dataframe_from_bradesco(pdf_path: str, terms) -> pd.DataFrame:
+def extract_dataframe_from_bradesco(pdf_path: str) -> pd.DataFrame:
     """Converte o extrato PDF para um DataFrame com colunas 'Data', 'Histórico' e 'Valor'."""
     # Converte PDF para TXT
     txt_path = "database/extrato_bradesco.txt"

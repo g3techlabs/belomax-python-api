@@ -3,7 +3,6 @@ from fastapi import FastAPI, UploadFile, Form
 from fastapi.middleware.cors import CORSMiddleware
 from typing import List
 from dotenv import load_dotenv
-import uvicorn
 import os
 
 from core.automations.statement_extract.extract_data import extract_data
@@ -11,9 +10,6 @@ from core.automations.statement_extract.extract_dataframe_from_bb import extract
 from core.automations.statement_extract.extract_dataframe_from_bradesco import extract_dataframe_from_bradesco
 from core.automations.statement_extract.extract_dataframe_from_sicoob import extract_table_from_pdf
 from core.utils.terms import extract_unique_terms
-
-from core.redis_queue.consumer import redis_consumer
-from multiprocessing import Process
 
 load_dotenv()
 app = FastAPI()
