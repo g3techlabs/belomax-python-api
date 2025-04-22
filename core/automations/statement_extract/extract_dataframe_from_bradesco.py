@@ -1,6 +1,7 @@
 import re
 from PyPDF2 import PdfReader
 import pandas as pd
+from datetime import datetime
 import os
 
 def pdf_to_txt(pdf_path: str, txt_path: str) -> None:
@@ -59,7 +60,12 @@ def detect_header_line(line: str) -> bool:
 def extract_dataframe_from_bradesco(pdf_path: str) -> pd.DataFrame:
     """Converte o extrato PDF para um DataFrame com colunas 'Data', 'Histórico' e 'Valor'."""
     # Converte PDF para TXT
-    txt_path = "database/extrato_bradesco.txt"
+    tmp_dir = "core/tmp"
+    os.makedirs(tmp_dir, exist_ok=True)
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    txt_path = os.path.join(tmp_dir, f"extrato_bradesco_{timestamp}.txt")
+
+    # Converte PDF para TXT
     pdf_to_txt(pdf_path, txt_path)
 
     # Lê o TXT
