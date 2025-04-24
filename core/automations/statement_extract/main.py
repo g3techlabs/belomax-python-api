@@ -16,77 +16,81 @@ def trigger_statement_extract(job_payload):
     print("🚀 Iniciando a automação de extração de termos de extratos bancários.")
     print(f"📦 Payload recebido: {job_payload}")
 
-    local_path = download_from_s3(job_payload["fileAwsName"])
     automation_id = job_payload["automationId"]
     auth_token = job_payload["authToken"]
-    print(f"📥 Arquivo baixado localmente em: {local_path}")
 
-    result = extract_data(bank=job_payload["bank"], path=local_path)
+    try:
+        local_path = download_from_s3(job_payload["fileAwsName"])
+        print(f"📥 Arquivo baixado localmente em: {local_path}")
 
-    if not isinstance(result, pd.DataFrame):
-        print("❌ ERRO: extract_data não retornou um DataFrame válido!")
-        os.remove(local_path)
-        return []
+        result = extract_data(bank=job_payload["bank"], path=local_path)
 
-    print("🧾 Primeiras linhas do DataFrame extraído:")
-    print(result.head())
+        if not isinstance(result, pd.DataFrame):
+            raise ValueError("extract_data não retornou um DataFrame válido.")
 
-    if "Historico" not in result.columns:
-        print("❌ A coluna 'Historico' não existe no DataFrame.")
-        os.remove(local_path)
-        return []
+        print("🧾 Primeiras linhas do DataFrame extraído:")
+        print(result.head())
 
-    terms = job_payload["terms"]
-    filtered_result = []
-    terms_not_found = []
-    sheets_created = []
+        if "Historico" not in result.columns:
+            raise KeyError("A coluna 'Historico' não existe no DataFrame extraído.")
 
-    for term in terms:
-        print(f"🔍 Buscando termo no histórico: '{term}'")
-        filtered_df = filter_df(result, "Historico", term)
+        terms = job_payload["terms"]
+        filtered_result = []
+        sheets_created = []
+        terms_not_found = []
 
-        if filtered_df.empty:
-            print(f"⚠️ Nenhuma correspondência encontrada para o termo: '{term}'")
-            terms_not_found.append(term)
-            continue
+        for term in terms:
+            print(f"🔍 Buscando termo no histórico: '{term}'")
+            filtered_df = filter_df(result, "Historico", term)
+
+            if filtered_df.empty:
+                print(f"⚠️ Nenhuma correspondência encontrada para o termo: '{term}'")
+                terms_not_found.append(term)
+                continue
+            else:
+                print(f"✅ Termo encontrado. Linhas retornadas: {len(filtered_df)}")
+                print(filtered_df)
+
+            original_filename = os.path.basename(local_path).replace(".pdf", "")
+            filename = f"{original_filename}-filter-{term.replace(' ', '_')}.xlsx"
+            output_path = os.path.join("core/tmp", filename)
+
+            filtered_df.to_excel(output_path, index=False)
+            print(f"📄 Planilha criada: {output_path}")
+
+            upload_success = upload_document(output_path, filename, automation_id, auth_token)
+
+            if upload_success:
+                sheets_created.append(filename)
+            else:
+                print(f"❌ Falha ao enviar: {filename}")
+
+            os.remove(output_path)
+            filtered_result.append(filtered_df)
+
+        if os.path.exists(local_path):
+            os.remove(local_path)
+            print(f"🗑️ Arquivo local removido: {local_path}")
+
+        if len(sheets_created) == 0:
+            print("⚠️ Nenhum termo encontrado. Nada foi salvo.")
+            update_status(automation_id, "FAILED", auth_token, "Nenhum termo encontrado.")
         else:
-            print(f"✅ Termo encontrado. Linhas retornadas: {len(filtered_df)}")
-            print(filtered_df)
-            
-        # timestamp = datetime.now(timezone.utc).strftime("%Y%m%dT%H%M%SZ")
-        original_filename = os.path.basename(local_path).replace(".pdf", "")
-        filename = f"{original_filename}-filter-{term.replace(' ', '_')}.xlsx"
-        output_path = os.path.join("core/tmp", filename)
+            print(f"✅ Termos processados com sucesso: {len(sheets_created)}")
+            update_status(automation_id, "FINISHED", auth_token)
 
-        filtered_df.to_excel(output_path, index=False)
-        print(f"📄 Planilha criada: {output_path}")
+        print("✅ Automação de extração concluída.")
+        return filtered_result
 
-        # Enviar para Nest
-        upload_success = upload_document(output_path, filename, automation_id, auth_token)
+    except Exception as e:
+        print(f"❌ ERRO GERAL: {e}")
+        update_status(automation_id, "FAILED", auth_token, str(e))
 
-        if upload_success:
-            sheets_created.append(filename)
-        else:
-            print(f"❌ Falha ao enviar: {filename}")
+        if 'local_path' in locals() and os.path.exists(local_path):
+            os.remove(local_path)
+            print(f"🗑️ Arquivo local removido após erro: {local_path}")
 
-        os.remove(output_path)
-
-        filtered_result.append(filtered_df)
-
-    # Remover o arquivo local temporário
-    if os.path.exists(local_path):
-        os.remove(local_path)
-        print(f"🗑️ Arquivo local removido: {local_path}")
-        
-    if len(sheets_created) == 0:
-        print("⚠️ Nenhum termo encontrado. Nada foi salvo.")
-        update_status(automation_id, "FAILED", auth_token)
-    else:
-        print(f"✅ Termos processados com sucesso: {len(sheets_created)}")
-        update_status(automation_id, "FINISHED", auth_token)
-
-    print("✅ Automação de extração concluída.")
-    return filtered_result
+        return []
 
 def upload_document(path: str, name: str, automation_id: str, token: str) -> bool:
     url = f"{API_BASE_URL}/api/documents"
@@ -110,18 +114,18 @@ def upload_document(path: str, name: str, automation_id: str, token: str) -> boo
         return False
 
 
-def update_status(automation_id: str, status: str, token: str, error: str) -> None:
+def update_status(automation_id: str, status: str, token: str, error: str = None) -> None:
     url = f"{API_BASE_URL}/api/automations/{automation_id}/status"
     headers = {
         "Authorization": token
     }
     
     data = {
-        "status": status,
-        "error": error
-    } if error else {
         "status": status
     }
+
+    if error:
+        data["error"] = error
 
     try:
         response = requests.put(url, json=data, headers=headers)
