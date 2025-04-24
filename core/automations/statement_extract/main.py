@@ -110,14 +110,21 @@ def upload_document(path: str, name: str, automation_id: str, token: str) -> boo
         return False
 
 
-def update_status(automation_id: str, status: str, token: str) -> None:
+def update_status(automation_id: str, status: str, token: str, error: str) -> None:
     url = f"{API_BASE_URL}/api/automations/{automation_id}/status"
     headers = {
         "Authorization": token
     }
+    
+    data = {
+        "status": status,
+        "error": error
+    } if error else {
+        "status": status
+    }
 
     try:
-        response = requests.put(url, json={'status': status}, headers=headers)
+        response = requests.put(url, json=data, headers=headers)
         if response.ok:
             print(f"✅ Status da automação atualizado para: {status}")
         else:
