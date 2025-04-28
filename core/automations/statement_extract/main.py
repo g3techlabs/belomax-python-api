@@ -77,7 +77,7 @@ def trigger_statement_extract(job_payload):
             update_status(automation_id, "FAILED", auth_token, "Nenhum termo encontrado.")
         else:
             print(f"✅ Termos processados com sucesso: {len(sheets_created)}")
-            update_status(automation_id, "FINISHED", auth_token)
+            # update_status(automation_id, "FINISHED", auth_token)
 
         print("✅ Automação de extração concluída.")
         return filtered_result
