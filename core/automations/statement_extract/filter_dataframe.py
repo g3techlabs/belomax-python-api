@@ -12,7 +12,7 @@ def filter_df(df: pd.DataFrame, column_name: str, term: str) -> pd.DataFrame:
     try:
         # Realiza o filtro no DataFrame
         filtered_df = df[df[column_name].str.contains(term, case=False, na=False)].copy()
-        filtered_df['Historico'] = term
+        # filtered_df['Historico'] = term
         return filtered_df
     except KeyError:
         print(f"Erro: A coluna '{column_name}' não existe no DataFrame.")
