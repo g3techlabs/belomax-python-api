@@ -58,7 +58,7 @@ def trigger_statement_extract(job_payload):
             filtered_df.to_excel(output_path, index=False)
             print(f"📄 Planilha criada: {output_path}")
 
-            upload_success = upload_document(output_path, f"FILTER-{term.replace(' ', '_')}", automation_id, auth_token)
+            upload_success = upload_document(output_path, f"FILTRO-{term.replace(' ', '_')}", automation_id, auth_token)
 
             if upload_success:
                 sheets_created.append(filename)
