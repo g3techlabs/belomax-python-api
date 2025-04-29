@@ -7,6 +7,7 @@ import json
 import time
 from dotenv import load_dotenv
 from botocore.exceptions import ClientError
+from botocore.config import Config
 
 # Carrega variáveis do .env
 load_dotenv()
@@ -19,6 +20,10 @@ def download_from_s3(key):
     aws_secret_key = os.getenv("AWS_SECRET_ACCESS_KEY")
     region = os.getenv("AWS_REGION")
     bucket = os.getenv("AWS_S3_BUCKET")
+    endpoint = os.getenv("AWS_ENDPOINT")
+
+    config = Config() if endpoint == None else Config(s3={'addressing_style': 'path'})
+
 
     # Caminho do diretório 'tmp' dentro do projeto
     base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))  # vai até /core
@@ -33,7 +38,9 @@ def download_from_s3(key):
         's3',
         aws_access_key_id=aws_access_key,
         aws_secret_access_key=aws_secret_key,
-        region_name=region
+        region_name=region,
+        endpoint_url=endpoint,
+        config=config
     )
 
     # Tenta baixar o arquivo
