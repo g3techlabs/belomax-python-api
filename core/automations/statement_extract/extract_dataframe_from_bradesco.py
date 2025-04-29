@@ -118,7 +118,7 @@ def extract_dataframe_from_bradesco(pdf_path: str) -> pd.DataFrame:
         # Adiciona a linha ao DataFrame
         row = {
             "Data": date,
-            "Historico": " ".join(re.findall(r'[A-Za-zÀ-ÿ0-9]+', history)),
+            "Historico": " ".join(re.findall(r'[A-Za-zÀ-ÿ0-9\.\-\*/\(\)\&]+', history)),
             "Valor": values[0] if len(values) > 0 else '',
             "Pagina": current_page
         }
