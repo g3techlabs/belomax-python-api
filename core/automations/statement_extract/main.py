@@ -5,6 +5,7 @@ import requests
 from core.automations.statement_extract.filter_dataframe import filter_df
 from core.aws.download_s3_file import download_from_s3
 from core.automations.statement_extract.extract_data import extract_data
+from core.automations.statement_extract.fill_excel_template import fill_excel_template
 import logging
 
 logging.getLogger("pdfplumber").setLevel(logging.ERROR)
@@ -55,8 +56,10 @@ def trigger_statement_extract(job_payload):
             filename = f"{original_filename}-filter-{term.replace(' ', '_')}.xlsx"
             output_path = os.path.join("core/tmp", filename)
 
-            filtered_df.to_excel(output_path, index=False)
-            print(f"📄 Planilha criada: {output_path}")
+            # filtered_df.to_excel(output_path, index=False)
+            # print(f"📄 Planilha criada: {output_path}")
+            fill_excel_template(filtered_df, output_path, term)
+            print(f"📊 Planilha preenchida: {output_path}")
 
             upload_success = upload_document(output_path, f"FILTRO-{term.replace(' ', '_')}", automation_id, auth_token)
 
