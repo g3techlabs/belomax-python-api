@@ -52,7 +52,7 @@ def trigger_statement_extract(job_payload):
                 print(f"✅ Termo encontrado. Linhas retornadas: {len(filtered_df)}")
                 print(filtered_df)
 
-            original_filename = os.path.basename(local_path).replace(".pdf", "")
+            # original_filename = os.path.basename(local_path).replace(".pdf", "")
             filename = f"filter-{term.replace(' ', '_')}.xlsx"
             output_path = os.path.join("core/tmp", filename)
 
