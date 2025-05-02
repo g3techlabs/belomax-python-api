@@ -53,7 +53,7 @@ def trigger_statement_extract(job_payload):
                 print(filtered_df)
 
             original_filename = os.path.basename(local_path).replace(".pdf", "")
-            filename = f"{original_filename}-filter-{term.replace(' ', '_')}.xlsx"
+            filename = f"filter-{term.replace(' ', '_')}.xlsx"
             output_path = os.path.join("core/tmp", filename)
 
             # filtered_df.to_excel(output_path, index=False)
