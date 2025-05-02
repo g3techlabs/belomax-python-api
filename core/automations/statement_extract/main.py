@@ -58,7 +58,7 @@ def trigger_statement_extract(job_payload):
 
             # filtered_df.to_excel(output_path, index=False)
             # print(f"📄 Planilha criada: {output_path}")
-            fill_excel_template(filtered_df, output_path, term)
+            fill_excel_template(filtered_df, output_path, job_payload["customerName"])
             print(f"📊 Planilha preenchida: {output_path}")
 
             upload_success = upload_document(output_path, f"FILTRO-{term.replace(' ', '_')}", automation_id, auth_token)

@@ -14,10 +14,10 @@ def test_fill_excel_template():
     output_path = './core/templates/Extrato_Preenchido_Com_Estilo.xlsx'
     nome = 'THIAGO'
     
-    filtered_df = filter_df(df, "Historico", "resgate")
+    # filtered_df = filter_df(df, "Historico", "resgate")
 
     # Testa a função
-    fill_excel_template(filtered_df, output_path, nome)
+    fill_excel_template(df, output_path, nome)
     print(f"Arquivo gerado com sucesso: {output_path}")
 
 if __name__ == "__main__":
