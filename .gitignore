@@ -3,3 +3,5 @@
 */tmp
 
 __pycache__/
+
+echo -e "\n# Python cache\n__pycache__/\n*.pyc\n*.pyo\n*.pyd\n.env\n" >> .gitignore
