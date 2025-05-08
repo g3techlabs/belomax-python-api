@@ -31,6 +31,22 @@ def trigger_statement_extract(job_payload):
 
         print("🧾 Primeiras linhas do DataFrame extraído:")
         print(result.head())
+        
+        if "Data" in result.columns:
+            # Cria uma nova coluna temporária só para ordenação
+            try:
+                # Caso venha como número (formato Excel), converte corretamente
+                result["_DataTemp"] = pd.to_datetime(result["Data"], errors="coerce", origin='1899-12-30', unit='D')
+            except Exception:
+                # Caso venha como string no formato dd/mm/yyyy
+                result["_DataTemp"] = pd.to_datetime(result["Data"], errors="coerce", dayfirst=True)
+
+            result = result.sort_values(by="_DataTemp", ascending=True).drop(columns=["_DataTemp"])
+
+            print("📅 DataFrame ordenado pela coluna 'Data' (desc):")
+            print(result.head())
+        else:
+            raise KeyError("A coluna 'Data' não existe no DataFrame extraído.")
 
         if "Historico" not in result.columns:
             raise KeyError("A coluna 'Historico' não existe no DataFrame extraído.")
@@ -53,7 +69,7 @@ def trigger_statement_extract(job_payload):
                 print(filtered_df)
 
             # original_filename = os.path.basename(local_path).replace(".pdf", "")
-            filename = f"filter-{term.replace(' ', '_')}.xlsx"
+            filename = f"filter-{term.replace(' ', '_')}-{job_payload["bank"].replace(' ', '_')}-{job_payload["customerName"].replace(' ', '_')}.xlsx"
             output_path = os.path.join("core/tmp", filename)
 
             # filtered_df.to_excel(output_path, index=False)
@@ -61,7 +77,7 @@ def trigger_statement_extract(job_payload):
             fill_excel_template(filtered_df, output_path, job_payload["customerName"])
             print(f"📊 Planilha preenchida: {output_path}")
 
-            upload_success = upload_document(output_path, f"FILTRO-{term.replace(' ', '_')}", automation_id, auth_token)
+            upload_success = upload_document(output_path, f"PLANILHA-{term.replace(' ', '_')}-{job_payload["bank"].replace(' ', '_')}-{job_payload["customerName"].replace(' ', '_')}", automation_id, auth_token)
 
             if upload_success:
                 sheets_created.append(filename)
