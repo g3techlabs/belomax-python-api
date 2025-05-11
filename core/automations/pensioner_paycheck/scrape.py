@@ -5,17 +5,21 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.remote.webdriver import WebDriver
 from selenium.webdriver.remote.webelement import WebElement
-from time import time
+from time import time, sleep
 import pandas as pd
 import numpy as np
 from core.utils.functions import convert_month, convert_seconds_to_formatted_time
 
-def scrape_unique(df: pd.DataFrame, name: str) -> List[Dict[str, Union[dict, list]]]:
-    print(f"Iniciando extração da planilha: {name}\n")
+def scrape(df: pd.DataFrame) -> List[Dict[str, Union[dict, list]]]:
+    print(f"Iniciando extração dos Contracheques de Pensionistas\n")
     
     options = webdriver.ChromeOptions()
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    options.add_argument("--headless=new")
+    # options.add_argument("--headless=new")  # ou "--headless" dependendo da versão
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")  # Pode ser necessário em alguns casos
+    options.add_argument("--remote-debugging-port=9222")  # Previne o erro do DevToolsActivePort
     driver: WebDriver = webdriver.Chrome(options=options)
     driver.maximize_window()
 
@@ -31,7 +35,7 @@ def scrape_unique(df: pd.DataFrame, name: str) -> List[Dict[str, Union[dict, lis
             driver.find_element(By.ID, 'cpf').send_keys(str(df['cpf'][i]))
             driver.find_element(By.ID, 'numpens').send_keys(str(df['numpens'][i]))
             driver.find_element(By.ID, 'mes').click()
-            driver.find_element(By.XPATH, f"/html/body/div[1]/div[2]/div/div/div[2]/form/div[5]/select/option[{convert_month(df['mes'][i])}]").click()
+            driver.find_element(By.XPATH, f"/html/body/div[1]/div[2]/div/div/div[2]/form/div[5]/select/option[{convert_month(str.lower(df['mes'][i]))}]").click()
             driver.find_element(By.ID, 'ano').send_keys(str(df['ano'][i]))
             driver.find_element(By.ID, 'frmDados').submit()
 
@@ -51,7 +55,7 @@ def scrape_unique(df: pd.DataFrame, name: str) -> List[Dict[str, Union[dict, lis
                 "totalBenefits": float(driver.find_element(By.XPATH, '/html/body/table[4]/tbody/tr/td[2]/div/font/font[2]/b').text.replace("R$", "").replace(".", "").replace(",", ".").strip()),
                 "netToReceive": float(driver.find_element(By.XPATH, '/html/body/table[4]/tbody/tr/td[4]/p/font/font[2]/b').text.replace("R$", "").replace(".", "").replace(",", ".").strip())
             }
-
+            
             # Extrair termos (vantagens e descontos)
             terms: List[Dict[str, Union[int, str, float]]] = []
             comp_disc_rows = driver.find_elements(By.XPATH, '/html/body/table[3]/tbody/tr')
