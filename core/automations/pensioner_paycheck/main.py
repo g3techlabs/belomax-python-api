@@ -5,6 +5,29 @@ from core.automations.pensioner_paycheck.scrape import scrape
 
 API_BASE_URL = os.getenv("NEST_API_URL", "http://localhost:3000")
 
+# Mapeamento de nomes de meses para números
+MONTHS_MAP = {
+    "janeiro": 1,
+    "fevereiro": 2,
+    "março": 3,
+    "abril": 4,
+    "maio": 5,
+    "junho": 6,
+    "julho": 7,
+    "agosto": 8,
+    "setembro": 9,
+    "outubro": 10,
+    "novembro": 11,
+    "dezembro": 12
+}
+
+def month_str_to_int(month):
+    if isinstance(month, int):
+        return month
+    if isinstance(month, str):
+        return MONTHS_MAP.get(month.strip().lower(), 0)
+    return 0
+
 def trigger_pensioner_paycheck(job_payload):
     print("🚀 Iniciando a automação de extração de contracheque de aposentados.")
     print(f"📦 Payload recebido: {job_payload}")
@@ -23,6 +46,7 @@ def trigger_pensioner_paycheck(job_payload):
             "month": "mes",
             "year": "ano"
         })
+
         result_data = scrape(df)
         
         if not result_data:
@@ -35,8 +59,8 @@ def trigger_pensioner_paycheck(job_payload):
                 "bond": paycheck.get("bond"),
                 "cpf": paycheck.get("cpf"),
                 "pensionerNumber": paycheck.get("pensionerNumber"),
-                "month": paycheck.get("month"),
-                "year": paycheck.get("year"),
+                "month": month_str_to_int(paycheck.get("month")),
+                "year": int(paycheck.get("year")),
                 "consignableMargin": float(paycheck.get("consignableMargin", 0)),
                 "totalBenefits": float(paycheck.get("totalBenefits", 0)),
                 "netToReceive": float(paycheck.get("netToReceive", 0)),
@@ -44,16 +68,15 @@ def trigger_pensioner_paycheck(job_payload):
                 "terms": []
             }
 
-            # Convertendo os termos
             for term in row.get("terms", []):
-              dto_payload["terms"].append({
-                  "month": str(term.get("month", "")),
-                  "year": str(term.get("year", "")),
-                  "type": str(term.get("type", "")),
-                  "code": int(term.get("code", 0)),
-                  "discrimination": str(term.get("discrimination", "")),
-                  "value": float(term.get("value", 0))
-              })
+                dto_payload["terms"].append({
+                    "month": month_str_to_int(term.get("month", "")),
+                    "year": int(term.get("year", 0)),
+                    "type": str(term.get("type", "")),
+                    "code": int(term.get("code", 0)),
+                    "discrimination": str(term.get("discrimination", "")),
+                    "value": float(term.get("value", 0))
+                })
 
             headers = {
                 "Authorization": auth_token,
@@ -68,7 +91,7 @@ def trigger_pensioner_paycheck(job_payload):
             else:
                 raise Exception(f"Falha ao enviar dados: {response.status_code} - {response.text}")
 
-        update_status(automation_id, "FINISHED", auth_token)
+        # update_status(automation_id, "FINISHED", auth_token)
         print("✅ Automação finalizada com sucesso.")
 
     except Exception as e:
