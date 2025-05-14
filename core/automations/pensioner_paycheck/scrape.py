@@ -15,7 +15,7 @@ def scrape(df: pd.DataFrame) -> List[Dict[str, Union[dict, list]]]:
     
     options = webdriver.ChromeOptions()
     options.add_experimental_option('excludeSwitches', ['enable-logging'])
-    # options.add_argument("--headless=new")  # ou "--headless" dependendo da versão
+    options.add_argument("--headless=new")  # ou "--headless" dependendo da versão
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")  # Pode ser necessário em alguns casos

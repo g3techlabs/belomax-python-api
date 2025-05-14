@@ -7,18 +7,18 @@ API_BASE_URL = os.getenv("NEST_API_URL", "http://localhost:3000")
 
 # Mapeamento de nomes de meses para números
 MONTHS_MAP = {
-    "janeiro": 1,
-    "fevereiro": 2,
-    "março": 3,
-    "abril": 4,
-    "maio": 5,
-    "junho": 6,
-    "julho": 7,
-    "agosto": 8,
-    "setembro": 9,
-    "outubro": 10,
-    "novembro": 11,
-    "dezembro": 12
+  "janeiro": 1,
+  "fevereiro": 2,
+  "março": 3,
+  "abril": 4,
+  "maio": 5,
+  "junho": 6,
+  "julho": 7,
+  "agosto": 8,
+  "setembro": 9,
+  "outubro": 10,
+  "novembro": 11,
+  "dezembro": 12
 }
 
 def month_str_to_int(month):
