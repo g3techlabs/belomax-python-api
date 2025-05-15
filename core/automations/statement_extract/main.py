@@ -55,6 +55,8 @@ def trigger_statement_extract(job_payload):
         filtered_result = []
         sheets_created = []
         terms_not_found = []
+        
+        result.to_excel("core/tmp/statement_extract.xlsx", index=False)
 
         for term in terms:
             print(f"🔍 Buscando termo no histórico: '{term}'")
