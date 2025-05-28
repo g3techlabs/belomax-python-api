@@ -1,7 +1,5 @@
 # Refatoração da função `scrape` para retornar dados no formato do modelo `PensionerPaycheck` e `PensionerPaycheckTerm`
 
-import tempfile
-
 from typing import List, Dict, Union
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -20,12 +18,13 @@ def scrape(df: pd.DataFrame) -> List[Dict[str, Union[dict, list]]]:
     options.add_argument("--no-sandbox")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
-    options.add_argument("--remote-debugging-port=9222")
 
-    # Criar um diretório temporário único para o user data
-    user_data_dir = tempfile.mkdtemp()
-    options.add_argument(f"--user-data-dir={user_data_dir}")
-    driver: WebDriver = webdriver.Chrome(options=options)
+    # driver: WebDriver = webdriver.Chrome(options=options)
+
+    driver = webdriver.Remote(
+      command_executor='http://localhost:4444/wd/hub',
+      options=options
+    )
     driver.maximize_window()
 
     initial_time = time()
