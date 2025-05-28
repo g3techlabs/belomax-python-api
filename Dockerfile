@@ -42,21 +42,21 @@ RUN apt-get update && apt-get install -y \
 RUN wget -q -O - https://dl.google.com/linux/linux_signing_key.pub | apt-key add - && \
   echo "deb [arch=amd64] http://dl.google.com/linux/chrome/deb/ stable main" > /etc/apt/sources.list.d/google-chrome.list
 
-# Instala o Google Chrome
-RUN apt-get update && apt-get install -y google-chrome-stable && \
-  rm -rf /var/lib/apt/lists/*
+# Baixe e instale o Chrome for Testing
+RUN wget -O /tmp/chrome-linux64.zip https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/137.0.7151.0/linux64/chrome-linux64.zip && \
+    unzip /tmp/chrome-linux64.zip -d /opt/ && \
+    ln -s /opt/chrome-linux64/chrome /usr/bin/google-chrome && \
+    rm /tmp/chrome-linux64.zip
 
-# Baixa e instala o ChromeDriver compatível
-RUN CHROME_VERSION=$(google-chrome-stable --version | grep -oP '\d+\.\d+\.\d+') && \
-  CHROME_MAJOR_VERSION=$(echo $CHROME_VERSION | cut -d '.' -f 1) && \
-  CHROMEDRIVER_VERSION=$(curl -sS "https://chromedriver.storage.googleapis.com/LATEST_RELEASE_$CHROME_MAJOR_VERSION") && \
-  wget -O /tmp/chromedriver.zip "https://chromedriver.storage.googleapis.com/${CHROMEDRIVER_VERSION}/chromedriver_linux64.zip" && \
-  unzip /tmp/chromedriver.zip -d /usr/local/bin/ && \
-  rm /tmp/chromedriver.zip && \
-  chmod +x /usr/local/bin/chromedriver
+# Baixe e instale o ChromeDriver correspondente
+RUN wget -O /tmp/chromedriver-linux64.zip https://edgedl.me.gvt1.com/edgedl/chrome/chrome-for-testing/137.0.7151.0/linux64/chromedriver-linux64.zip && \
+    unzip /tmp/chromedriver-linux64.zip -d /opt/ && \
+    ln -s /opt/chromedriver-linux64/chromedriver /usr/bin/chromedriver && \
+    rm /tmp/chromedriver-linux64.zip
 
 # 5️⃣ Expõe a porta da API (FastAPI)
 EXPOSE 8000
+RUN chmod +x /usr/bin/chromedriver
 
 # 6️⃣ Comando padrão (sobrescrito no docker-compose)
 CMD ["uvicorn", "api:app", "--host", "0.0.0.0", "--port", "8000"]
