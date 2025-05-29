@@ -7,16 +7,8 @@ FROM selenium/standalone-chrome:latest
 #  Instala Python, pip e compiladores
 # ───────────────────────────────────────
 USER root
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-        python3 \
-        python3-pip \
-        python3-venv \
-        python3-dev \
-        build-essential \
-        libffi-dev && \
-    pip3 install --upgrade pip && \
-    rm -rf /var/lib/apt/lists/*
+# Atualiza apenas o pip já existente na imagem, evitando dependências de sistema
+RUN python3 -m pip install --upgrade pip
 
 # ───────────────────────────────────────
 #  Configura o diretório da aplicação
