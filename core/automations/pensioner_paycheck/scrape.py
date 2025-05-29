@@ -19,12 +19,12 @@ def scrape(df: pd.DataFrame) -> List[Dict[str, Union[dict, list]]]:
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
 
-    # driver: WebDriver = webdriver.Chrome(options=options)
+    driver: WebDriver = webdriver.Chrome(options=options)
 
-    driver = webdriver.Remote(
-      command_executor='http://localhost:4444/wd/hub',
-      options=options
-    )
+    # driver = webdriver.Remote(
+    #   command_executor='http://localhost:4444/wd/hub',
+    #   options=options
+    # )
     driver.maximize_window()
 
     initial_time = time()
