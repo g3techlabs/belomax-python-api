@@ -24,8 +24,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 COPY . .
 
 # Ajusta permissões para o usuário não-root da imagem Selenium
-RUN chown -R seluser:seluser /app
-USER seluser
+# RUN chown -R seluser:seluser /app
+# USER seluser
 
 # ───────────────────────────────────────
 #  Definições de ambiente e porta
