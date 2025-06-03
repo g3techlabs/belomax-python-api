@@ -1,5 +1,6 @@
 # Refatoração da função `scrape` para retornar dados no formato do modelo `PensionerPaycheck` e `PensionerPaycheckTerm`
 
+import os
 from typing import List, Dict, Union
 from selenium import webdriver
 from selenium.webdriver.common.by import By
@@ -19,13 +20,30 @@ def scrape(df: pd.DataFrame) -> List[Dict[str, Union[dict, list]]]:
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--disable-gpu")
 
-    driver: WebDriver = webdriver.Chrome(options=options)
+    # driver: WebDriver = webdriver.Chrome(options=options)
 
-    # driver = webdriver.Remote(
-    #   command_executor='http://localhost:4444/wd/hub',
-    #   options=options
-    # )
-    driver.maximize_window()
+    # selenium_server_url = "http://localhost:4444/wd/hub"
+
+    # Leia a variável de ambiente. Se não estiver definida, assume 'local'.
+    selenium_environment = os.getenv("SELENIUM_ENV", "local")
+
+    if selenium_environment == "remote":
+        print("Usando WebDriver Remoto (Produção/Docker).")
+        # Conecta-se ao servidor Selenium que está rodando no container (fornecido pela imagem base)
+        driver: WebDriver = webdriver.Remote(
+            command_executor='http://localhost:4444/wd/hub', # Ou 'http://127.0.0.1:4444/wd/hub'
+            options=options
+        )
+    else:
+        print("Usando WebDriver Chrome Local (Desenvolvimento).")
+        # Para desenvolvimento local.
+        # O Selenium 4+ tenta gerenciar o chromedriver automaticamente (Selenium Manager).
+        # Se você tiver problemas, pode precisar especificar o caminho para o chromedriver
+        # usando webdriver.ChromeService:
+        # from selenium.webdriver.chrome.service import Service as ChromeService
+        # service = ChromeService(executable_path='/caminho/para/seu/chromedriver')
+        # driver: WebDriver = webdriver.Chrome(service=service, options=options)
+        driver: WebDriver = webdriver.Chrome(options=options)
 
     initial_time = time()
     resultados = []

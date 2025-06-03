@@ -32,7 +32,9 @@ USER seluser
 # ───────────────────────────────────────
 ENV PYTHONUNBUFFERED=1 \
     PYTHONDONTWRITEBYTECODE=1 \
-    PORT=8000
+    PORT=8000 \
+    PYTHONPATH=/app \
+    SELENIUM_ENV="remote"
 
 EXPOSE ${PORT}
 
