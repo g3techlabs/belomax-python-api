@@ -25,13 +25,13 @@ def scrape(df: pd.DataFrame) -> List[Dict[str, Union[dict, list]]]:
     # selenium_server_url = "http://localhost:4444/wd/hub"
 
     # Leia a variável de ambiente. Se não estiver definida, assume 'local'.
-    selenium_environment = os.getenv("SELENIUM_ENV", "local")
+    selenium_remote_url = os.getenv("SELENIUM_REMOTE_URL", "local")
 
-    if selenium_environment == "remote":
+    if selenium_remote_url != "local":
         print("Usando WebDriver Remoto (Produção/Docker).")
         # Conecta-se ao servidor Selenium que está rodando no container (fornecido pela imagem base)
         driver: WebDriver = webdriver.Remote(
-            command_executor='http://localhost:4444/wd/hub', # Ou 'http://127.0.0.1:4444/wd/hub'
+            command_executor=selenium_remote_url, # Ou 'http://127.0.0.1:4444/wd/hub'
             options=options
         )
     else:
